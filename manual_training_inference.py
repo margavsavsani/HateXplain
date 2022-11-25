@@ -310,8 +310,8 @@ def train_model(params,device):
             
             loss = outputs[0]
            
-            if(params['logging']=='neptune'):
-            	neptune.log_metric('batch_loss',loss.item())
+            # if(params['logging']=='neptune'):
+            # 	neptune.log_metric('batch_loss',loss.item())
             # Accumulate the training loss over all of the batches so that we can
             # calculate the average loss at the end. `loss` is a Tensor containing a
             # single value; the `.item()` function just returns the Python value 

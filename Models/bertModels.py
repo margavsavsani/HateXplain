@@ -60,6 +60,19 @@ class SC_weighted_BERT(BertPreTrainedModel):
 
         return outputs  # (loss), logits, (hidden_states), (attentions)
 
-    
+def select_model(params,embeddings):
+    if(params['bert_tokens']):
+        if(params['what_bert']=='weighted'):
+            model = SC_weighted_BERT.from_pretrained(
+            params['path_files'], # Use the 12-layer BERT model, with an uncased vocab.
+            num_labels = params['num_classes'], # The number of output labels
+            output_attentions = True, # Whether the model returns attentions weights.
+            output_hidden_states = False, # Whether the model returns all hidden-states.
+            hidden_dropout_prob=params['dropout_bert'],
+            params=params
+            )
+        else:
+            print("Error in bert model name!!!!")
+        return model
     
  
