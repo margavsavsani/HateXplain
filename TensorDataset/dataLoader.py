@@ -1,6 +1,6 @@
 import torch
 import transformers
-from keras.preprocessing.sequence import pad_sequences
+from keras_preprocessing.sequence import pad_sequences
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 import numpy as np
 from sklearn.preprocessing import LabelEncoder

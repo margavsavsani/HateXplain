@@ -1,8 +1,7 @@
 ### This is run when you want to select the parameters from the parameters file
 import transformers 
 import torch
-import neptune
-from knockknock import slack_sender
+# import neptune
 from transformers import *
 import glob 
 from transformers import BertTokenizer
@@ -22,13 +21,11 @@ import time
 import os
 from transformers import BertTokenizer
 import GPUtil
-from sklearn.utils import class_weight
+from sklearn.utils.class_weight import compute_class_weight
 import json
 from Models.bertModels import *
-from Models.otherModels import *
 import sys
 import time
-from waiting import wait
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
 import threading
@@ -206,7 +203,7 @@ def train_model(params,device):
 #         print(y_test)
         encoder = LabelEncoder()
         encoder.classes_ = np.load(params['class_names'],allow_pickle=True)
-        params['weights']=class_weight.compute_class_weight('balanced',np.unique(y_test),y_test).astype('float32') 
+        params['weights']=compute_class_weight(class_weight ='balanced',classes = np.unique(y_test),y =y_test).astype('float32') 
         #params['weights']=np.array([len(y_test)/y_test.count(encoder.classes_[0]),len(y_test)/y_test.count(encoder.classes_[1]),len(y_test)/y_test.count(encoder.classes_[2])]).astype('float32') 
         
         
@@ -244,14 +241,14 @@ def train_model(params,device):
     else:
         name_one=params['model_name']
         
-    if(params['logging']=='neptune'):
-        neptune.create_experiment(name_one,params=params,send_hardware_metrics=False,run_monitoring_thread=False)
+    # if(params['logging']=='neptune'):
+    #     neptune.create_experiment(name_one,params=params,send_hardware_metrics=False,run_monitoring_thread=False)
         
-        neptune.append_tag(name_one)
-        if(params['best_params']):
-            neptune.append_tag('AAAI final best')
-        else:
-            neptune.append_tag('AAAI final')
+    #     neptune.append_tag(name_one)
+    #     if(params['best_params']):
+    #         neptune.append_tag('AAAI final best')
+    #     else:
+    #         neptune.append_tag('AAAI final')
         
     best_val_fscore=0
     best_test_fscore=0
@@ -331,10 +328,12 @@ def train_model(params,device):
             # Update the learning rate.
             if(params['bert_tokens']):
                 scheduler.step()
+            print(loss)
         # Calculate the average loss over the training data.
         avg_train_loss = total_loss / len(train_dataloader)
         if(params['logging']=='neptune'):
-            neptune.log_metric('avg_train_loss',avg_train_loss)
+            # neptune.log_metric('avg_train_loss',avg_train_loss)
+            print("done_1")
         else:
             print('avg_train_loss',avg_train_loss)
 
@@ -345,24 +344,24 @@ def train_model(params,device):
         test_fscore,test_accuracy,test_precision,test_recall,test_roc_auc,logits_all_final=Eval_phase(params,'test',model,test_dataloader,device)
 
         #Report the final accuracy for this validation run.
-        if(params['logging']=='neptune'):	
-            neptune.log_metric('test_fscore',test_fscore)
-            neptune.log_metric('test_accuracy',test_accuracy)
-            neptune.log_metric('test_precision',test_precision)
-            neptune.log_metric('test_recall',test_recall)
-            neptune.log_metric('test_rocauc',test_roc_auc)
+        # if(params['logging']=='neptune'):	
+        #     neptune.log_metric('test_fscore',test_fscore)
+        #     neptune.log_metric('test_accuracy',test_accuracy)
+        #     neptune.log_metric('test_precision',test_precision)
+        #     neptune.log_metric('test_recall',test_recall)
+        #     neptune.log_metric('test_rocauc',test_roc_auc)
             
-            neptune.log_metric('val_fscore',val_fscore)
-            neptune.log_metric('val_accuracy',val_accuracy)
-            neptune.log_metric('val_precision',val_precision)
-            neptune.log_metric('val_recall',val_recall)
-            neptune.log_metric('val_rocauc',val_roc_auc)
+        #     neptune.log_metric('val_fscore',val_fscore)
+        #     neptune.log_metric('val_accuracy',val_accuracy)
+        #     neptune.log_metric('val_precision',val_precision)
+        #     neptune.log_metric('val_recall',val_recall)
+        #     neptune.log_metric('val_rocauc',val_roc_auc)
     
-            neptune.log_metric('train_fscore',train_fscore)
-            neptune.log_metric('train_accuracy',train_accuracy)
-            neptune.log_metric('train_precision',train_precision)
-            neptune.log_metric('train_recall',train_recall)
-            neptune.log_metric('train_rocauc',train_roc_auc)
+        #     neptune.log_metric('train_fscore',train_fscore)
+        #     neptune.log_metric('train_accuracy',train_accuracy)
+        #     neptune.log_metric('train_precision',train_precision)
+        #     neptune.log_metric('train_recall',train_recall)
+        #     neptune.log_metric('train_rocauc',train_roc_auc)
 
             
         
@@ -389,16 +388,17 @@ def train_model(params,device):
                 save_normal_model(model,params)
 
     if(params['logging']=='neptune'):
-        neptune.log_metric('best_val_fscore',best_val_fscore)
-        neptune.log_metric('best_test_fscore',best_test_fscore)
-        neptune.log_metric('best_val_rocauc',best_val_roc_auc)
-        neptune.log_metric('best_test_rocauc',best_test_roc_auc)
-        neptune.log_metric('best_val_precision',best_val_precision)
-        neptune.log_metric('best_test_precision',best_test_precision)
-        neptune.log_metric('best_val_recall',best_val_recall)
-        neptune.log_metric('best_test_recall',best_test_recall)
+        # neptune.log_metric('best_val_fscore',best_val_fscore)
+        # neptune.log_metric('best_test_fscore',best_test_fscore)
+        # neptune.log_metric('best_val_rocauc',best_val_roc_auc)
+        # neptune.log_metric('best_test_rocauc',best_test_roc_auc)
+        # neptune.log_metric('best_val_precision',best_val_precision)
+        # neptune.log_metric('best_test_precision',best_test_precision)
+        # neptune.log_metric('best_val_recall',best_val_recall)
+        # neptune.log_metric('best_test_recall',best_test_recall)
         
-        neptune.stop()
+        # neptune.stop()
+        print("done")
     else:
         print('best_val_fscore',best_val_fscore)
         print('best_test_fscore',best_test_fscore)

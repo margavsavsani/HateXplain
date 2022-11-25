@@ -8,7 +8,6 @@ from .preProcess import ek_extra_preprocess
 from .attentionCal import aggregate_attention
 from .spanMatcher import returnMask,returnMaskonetime
 from transformers import BertTokenizer
-from .utils import CheckForGreater,most_frequent
 from .preProcess import *   
 from transformers import BertTokenizer
 from os import path
