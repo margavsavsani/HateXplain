@@ -13,7 +13,11 @@ class SC_weighted_BERT(BertPreTrainedModel):
         self.sv_layer = params['supervised_layer_pos']
         self.bert = BertModel(config)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
-        self.classifier = nn.Linear(config.hidden_size, config.num_labels)
+        self.Linear=nn.Linear(config.hidden_size,128)
+        self.RELU=nn.ReLU()
+        self.Linear2=nn.Linear(128,128)
+        self.RELU2=nn.ReLU()
+        self.classifier = nn.Linear(128, config.num_labels)
         #self.softmax=nn.Softmax(config.num_labels)
         self.init_weights()
 
@@ -36,10 +40,9 @@ class SC_weighted_BERT(BertPreTrainedModel):
             head_mask=head_mask,
             inputs_embeds=inputs_embeds,
         )
-
         pooled_output = outputs[1]
 
-        pooled_output = self.dropout(pooled_output)
+        pooled_output = self.RELU2(self.Linear2(self.RELU(self.Linear(self.dropout(pooled_output)))))
         logits = self.classifier(pooled_output)
         #logits = self.softmax(logits)
 
