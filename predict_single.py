@@ -14,6 +14,7 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils.class_weight import compute_class_weight
 from Models.utils import load_model
+import shutil
 
 def annotated_data(tokenized_string):
     tokenized_string=[x.lower() for x in tokenized_string]
@@ -79,15 +80,15 @@ def get_data(data,params,tokenizer):
     return training_data
 
 def collec_data(params,tokenized_string):
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=False)
+    tokenizer = BertTokenizer.from_pretrained("Saved/bert-base-uncased_11_6_3_0.001")
     data_all_labelled=annotated_data(tokenized_string)
     train_data=get_data(data_all_labelled,params,tokenizer)
     return train_data
 
 
-def createDataset(params):
+def createDataset(params,tokenized_string):
     filename=set_name(params)
-    dataset=collec_data(params)    
+    dataset=collec_data(params,tokenized_string)    
     dataset= pd.read_pickle(filename) 
     X_pred=dataset
     if(params['bert_tokens']):
@@ -99,28 +100,21 @@ def createDataset(params):
         
     print("total prediction size:", len(X_pred))
 
-        
+    if(path.exists(filename[:-7])):
+      shutil.rmtree(filename[:-7], ignore_errors=True)    
     os.mkdir(filename[:-7])
     with open(filename[:-7]+'/pred_data.pickle', 'wb') as f:
         pickle.dump(X_pred, f)
     
     return X_pred
 
-def pred_model(params,device):
+def pred_model(params,device,tokenized_string):
     
-    pred=createDataset(params)
+    pred=createDataset(params,tokenized_string)
 
     pred_dataloader =combine_features(pred,params,is_train=False)   
    
-    model = SC_weighted_BERT.from_pretrained(
-            params['path_files'], # Use the 12-layer BERT model, with an uncased vocab.
-            num_labels = params['num_classes'], # The number of output labels
-            output_attentions = True, # Whether the model returns attentions weights.
-            output_hidden_states = False, # Whether the model returns all hidden-states.
-            hidden_dropout_prob=params['dropout_bert'],
-            params=params
-            )
-    model=load_model(model,params)
+    model =BertModel.from_pretrained("Saved/bert-base-uncased_11_6_3_0.001")
     if(params["device"]=='cuda'):
         model.cuda()
 
@@ -143,7 +137,7 @@ def pred_model(params,device):
         outputs = model(b_input_ids, 
             attention_vals=b_att_val,
             attention_mask=b_input_mask, 
-            labels=b_labels,
+            labels=None,
             device=device)
 
         return outputs
