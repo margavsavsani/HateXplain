@@ -15,7 +15,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.utils.class_weight import compute_class_weight
 from Models.utils import load_model
 import shutil
-
+from os import path
 def annotated_data(tokenized_string):
     tokenized_string=[x.lower() for x in tokenized_string]
     dict_data=[]
@@ -80,7 +80,7 @@ def get_data(data,params,tokenizer):
     return training_data
 
 def collec_data(params,tokenized_string):
-    tokenizer = BertTokenizer.from_pretrained("Saved/bert-base-uncased_11_6_3_0.001")
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=False)
     data_all_labelled=annotated_data(tokenized_string)
     train_data=get_data(data_all_labelled,params,tokenizer)
     return train_data
@@ -113,8 +113,9 @@ def pred_model(params,device,tokenized_string):
     pred=createDataset(params,tokenized_string)
 
     pred_dataloader =combine_features(pred,params,is_train=False)   
-   
-    model =BertModel.from_pretrained("Saved/bert-base-uncased_11_6_3_0.001")
+    output_dir = 'Saved/'+params['path_files']+'_'
+    output_dir =  output_dir+str(params['supervised_layer_pos'])+'_'+str(params['num_supervised_heads'])+'_'+str(params['num_classes'])+'_'+str(params['att_lambda'])+'/'
+    model =BertForSequenceClassification.from_pretrained(output_dir)
     if(params["device"]=='cuda'):
         model.cuda()
 
@@ -135,9 +136,12 @@ def pred_model(params,device,tokenized_string):
         # (source: https://stackoverflow.com/questions/48001598/why-do-we-need-to-call-zero-grad-in-pytorch)
         model.zero_grad()        
         outputs = model(b_input_ids, 
-            attention_vals=b_att_val,
-            attention_mask=b_input_mask, 
-            labels=None,
-            device=device)
-
-        return outputs
+        attention_mask=b_input_mask, 
+        labels=b_labels,
+        )
+        classes=outputs[0]
+        weights=outputs[3]
+        encoder = LabelEncoder()
+        encoder.classes_ = np.load(params['class_names'],allow_pickle=True)
+        classes=encoder.inverse_transform(classes)
+        return outputs,classes,weights
