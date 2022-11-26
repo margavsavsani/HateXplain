@@ -1,15 +1,12 @@
 import pandas as pd
-from glob import glob
 import json
-from tqdm import tqdm_notebook,tqdm
+from tqdm import tqdm
 from difflib import SequenceMatcher
-from collections import Counter
 from .preProcess import ek_extra_preprocess
 from .attentionCal import aggregate_attention
-from .spanMatcher import returnMask,returnMaskonetime
+from .spanMatcher import returnMask
 from transformers import BertTokenizer
 from .preProcess import *   
-from transformers import BertTokenizer
 from os import path
 import pickle
 import numpy as np
