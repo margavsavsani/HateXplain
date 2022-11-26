@@ -49,15 +49,12 @@ class SC_weighted_BERT(BertPreTrainedModel):
             loss_logits =  loss_funct(logits.view(-1, self.num_labels), labels.view(-1))
             loss= loss_logits
             if(self.train_att):
-                l_att=[]
                 loss_att=0
                 for i in range(self.num_sv_heads):
                     attention_weights=outputs[1][self.sv_layer][:,i,0,:]
-                    l_att.append(attention_weights)
                     loss_att +=self.lam*masked_cross_entropy(attention_weights,attention_vals,attention_mask)
                 loss = loss + loss_att
             outputs = (loss,) + outputs
-            outputs=outputs +(l_att,)
         return outputs  # (loss), logits, (hidden_states), (attentions)
 
 def select_model(params,embeddings):

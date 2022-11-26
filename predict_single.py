@@ -22,8 +22,12 @@ def annotated_data(tokenized_string):
     tokenized_string=[x.lower() for x in tokenized_string]
     dict_data=[]
     length=len(tokenized_string)
-    l=[0]*length
-    l[0]=1
+    l=[]
+    for i in range(length):
+        if i%2==0:
+            l.append(1)
+        else:
+            l.append(0)
     l2=[l,l,l]
     temp={}
     temp['post_id']="24198580_gab"
@@ -72,25 +76,26 @@ def get_data(data,params,tokenizer):
             count_confused+=1
             
     # Calling DataFrame constructor after zipping 
-    # both lists, with columns specified 
+    # both lists, with columns specified
+    attention_mask=attention_masks[0] 
     training_data = pd.DataFrame(list(zip(post_ids_list,text_list,attention_list,label_list)), 
                    columns =['Post_id','Text', 'Attention' , 'Label']) 
     
     
     filename=set_name(params)
     training_data.to_pickle(filename)
-    return training_data
+    return training_data,attention_mask
 
 def collec_data(params,tokenized_string):
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=False)
     data_all_labelled=annotated_data(tokenized_string)
-    train_data=get_data(data_all_labelled,params,tokenizer)
-    return train_data
+    train_data,attention_mask=get_data(data_all_labelled,params,tokenizer)
+    return train_data,attention_mask
 
 
 def createDataset(params,tokenized_string):
     filename=set_name(params)
-    dataset=collec_data(params,tokenized_string)    
+    dataset,attention_mask=collec_data(params,tokenized_string)    
     dataset= pd.read_pickle(filename) 
     X_pred=dataset
     if(params['bert_tokens']):
@@ -108,11 +113,11 @@ def createDataset(params,tokenized_string):
     with open(filename[:-7]+'/pred_data.pickle', 'wb') as f:
         pickle.dump(X_pred, f)
     
-    return X_pred
+    return X_pred,attention_mask
 
 def pred_model(params,device,tokenized_string):
     
-    pred=createDataset(params,tokenized_string)
+    pred,attention_mask=createDataset(params,tokenized_string)
 
     pred_dataloader =combine_features(pred,params,is_train=False)   
     output_dir = 'Saved/'+params['path_files']+'_'
@@ -141,9 +146,8 @@ def pred_model(params,device,tokenized_string):
         attention_mask=b_input_mask, 
         labels=b_labels,
         )
-        classes=outputs[0]
-        weights=outputs[3]
+        classes=outputs[1].cpu()
         encoder = LabelEncoder()
         encoder.classes_ = np.load(params['class_names'],allow_pickle=True)
-        classes=encoder.inverse_transform(classes)
-        return outputs,classes,weights
+        classes=encoder.inverse_transform(classes.detach().numpy().argmax(axis=1))
+        return outputs,classes.item(),attention_mask
