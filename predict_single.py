@@ -16,6 +16,8 @@ from sklearn.utils.class_weight import compute_class_weight
 from Models.utils import load_model
 import shutil
 from os import path
+from transformers import BertForSequenceClassification
+
 def annotated_data(tokenized_string):
     tokenized_string=[x.lower() for x in tokenized_string]
     dict_data=[]
