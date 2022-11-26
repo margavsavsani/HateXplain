@@ -9,7 +9,7 @@ from transformers import BertForSequenceClassification, AdamW, BertConfig
 import random
 import pandas as pd
 from transformers import BertTokenizer
-from Models.utils import masked_cross_entropy,fix_the_random,format_time,save_normal_model,save_bert_model
+from Models.utils import masked_cross_entropy,fix_the_random,format_time,save_bert_model
 from sklearn.metrics import accuracy_score,f1_score
 from tqdm import tqdm
 from TensorDataset.datsetSplitter import createDatasetSplit
