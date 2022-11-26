@@ -149,5 +149,25 @@ def pred_model(params,device,tokenized_string):
         classes=outputs[1].cpu()
         encoder = LabelEncoder()
         encoder.classes_ = np.load(params['class_names'],allow_pickle=True)
-        classes=encoder.inverse_transform(classes.detach().numpy().argmax(axis=1))
-        return outputs,classes.item(),attention_mask
+        classes=encoder.inverse_transform(classes.detach().numpy().argmax(axis=1)).item()
+        vec=np.zeros((params['num_supervised_heads'],len(attention_mask)))
+        for i in range(params['num_supervised_heads']):
+            vec[i]=outputs[2][params['supervised_layer_pos']].cpu()[:,i,0,:][0,0:len(attention_mask)].detach().numpy()
+        vec_mean = vec.mean(axis = 0)
+        att_final = []
+        temp = 0
+        flag=0
+        for i in range(0,len(attention_mask)):
+            if (i==0):
+                continue
+            if (i==len(attention_mask)-1):
+                att_final.append(temp)
+                break
+            if(attention_mask[i]==flag):
+                temp += vec_mean[i]
+            else:
+                if i != 1:  
+                    att_final.append(temp)
+                temp = vec_mean[i]
+                flag = 1-flag
+        return outputs,classes,att_final

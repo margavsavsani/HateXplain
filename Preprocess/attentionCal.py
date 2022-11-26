@@ -3,7 +3,6 @@ from numpy import array, exp
 ###this file contain different attention mask calculation from the n masks from n annotators. In this code there are 3 annotators
 
 
-
 #### Few helper functions to convert attention vectors in 0 to 1 scale. While softmax converts all the values such that their sum lies between 0 --> 1. Sigmoid converts each value in the vector in the range 0 -> 1.
 
 ##### We mostly use softmax
@@ -54,68 +53,3 @@ def aggregate_attention(at_mask,row,params):
 
     return at_mask_fin
     
-    
-    
-##### Decay and distribution functions.To decay the attentions left and right of the attented word. This is done to decentralise the attention to a single word. 
-def distribute(old_distribution, new_distribution, index, left, right,params):
-    window = params['window']
-    alpha = params['alpha']
-    p_value = params['p_value']
-    method =params['method']
-    
-    
-    reserve = alpha * old_distribution[index]
-#     old_distribution[index] = old_distribution[index] - reserve
-    
-    if method=='additive':    
-        for temp in range(index - left, index):
-            new_distribution[temp] = new_distribution[temp] + reserve/(left+right)
-        
-        for temp in range(index + 1, index+right):
-            new_distribution[temp] = new_distribution[temp] + reserve/(left+right)
-    
-    if method == 'geometric':
-        # we first generate the geometric distributio for the left side
-        temp_sum = 0.0
-        newprob = []
-        for temp in range(left):
-            each_prob = p_value*((1.0-p_value)**temp)
-            newprob.append(each_prob)
-            temp_sum +=each_prob
-            newprob = [each/temp_sum for each in newprob]
-        
-        for temp in range(index - left, index):
-            new_distribution[temp] = new_distribution[temp] + reserve*newprob[-(temp-(index-left))-1]
-        
-        # do the same thing for right, but now the order is opposite
-        temp_sum = 0.0
-        newprob = []
-        for temp in range(right):
-            each_prob = p_value*((1.0-p_value)**temp)
-            newprob.append(each_prob)
-            temp_sum +=each_prob
-            newprob = [each/temp_sum for each in newprob]
-        for temp in range(index + 1, index+right):
-            new_distribution[temp] = new_distribution[temp] + reserve*newprob[temp-(index + 1)]
-    
-    return new_distribution
-
-
-
-def decay(old_distribution,params):
-    window=params['window']
-    new_distribution = [0.0]*len(old_distribution)
-    for index in range(len(old_distribution)):
-        right = min(window, len(old_distribution) - index)
-        left = min(window, index)
-        new_distribution = distribute(old_distribution, new_distribution, index, left, right, params)
-
-    if(params['normalized']):
-        norm_distribution = []
-        for index in range(len(old_distribution)):
-            norm_distribution.append(old_distribution[index] + new_distribution[index])
-        tempsum = sum(norm_distribution)
-        new_distrbution = [each/tempsum for each in norm_distribution]
-    return new_distribution
-
-

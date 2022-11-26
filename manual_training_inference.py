@@ -71,19 +71,7 @@ def select_model(params,embeddings):
             print("Error in bert model name!!!!")
         return model
     else:
-        text=params['model_name']
-        if(text=="birnn"):
-            model=BiRNN(params,embeddings)
-        elif(text == "birnnatt"):
-            model=BiAtt_RNN(params,embeddings,return_att=False,)
-        elif(text == "birnnscrat"):
-            model=BiAtt_RNN(params,embeddings,return_att=True)
-        elif(text == "cnn_gru"):
-            model=CNN_GRU(params,embeddings)
-        elif(text == "lstm_bad"):
-            model=LSTM_bad(params)
-        else:
-            print("Error in model name!!!!")
+        print("Error in model name!!!!")
         return model
 
 
@@ -414,13 +402,6 @@ def train_model(params,device):
     return 1
 
 
-
-
-
-
-
-
-
 params_data={
     'include_special':False, 
     'bert_tokens':False,
@@ -547,9 +528,10 @@ if __name__=='__main__':
     ##### change in logging to output the results to neptune
     params['logging']='local'
     if(params['logging']=='neptune'):
-        from api_config import project_name,api_token
-        neptune.init(project_name,api_token=api_token)
-        neptune.set_project(project_name)
+        # from api_config import project_name,api_token
+        # neptune.init(project_name,api_token=api_token)
+        # neptune.set_project(project_name)
+        print("done")
     torch.autograd.set_detect_anomaly(True)
     if torch.cuda.is_available() and params['device']=='cuda':    
         # Tell PyTorch to use the GPU.    
